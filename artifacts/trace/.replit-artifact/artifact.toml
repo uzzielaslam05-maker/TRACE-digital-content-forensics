@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "TRACE Digital Content Forensics"
+description = "A professional digital forensics workspace that investigates the provenance, metadata, and deterministic signals behind images and text without fabricating AI-detection certainty."
+version = "1.0.0"
+id = "artifacts/trace"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24781
+
+[services.development]
+run = "pnpm --filter @workspace/trace run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/trace", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/trace/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24781"
+BASE_PATH = "/"

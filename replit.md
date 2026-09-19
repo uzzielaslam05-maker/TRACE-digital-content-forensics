@@ -1,6 +1,6 @@
-# [Project name]
+# TRACE Digital Content Forensics
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+TRACE investigates the origin and modification history of digital images and text using transparent, deterministic evidence instead of fabricated AI-detection certainty.
 
 ## Run & Operate
 
@@ -22,23 +22,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/trace/src/` — React/Vite application, routes, report views, and visual system
+- `artifacts/api-server/src/routes/analyses.ts` — analysis and history API
+- `artifacts/api-server/src/services/forensics.ts` — deterministic image and text inspection
+- `lib/api-spec/openapi.yaml` — source of truth for API contracts
+- `lib/db/src/schema/index.ts` — PostgreSQL schema for analyses, evidence, detector results, and reports
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Evidence is stored separately from the final interpretation so individual findings remain inspectable.
+- Confidence is nullable and the MVP returns `inconclusive` when no reliable model is configured.
+- Uploaded images are processed in memory; only hashes, metadata, evidence, and reports are retained.
+- Image upload uses a bounded base64 JSON contract to keep the shared TypeScript client/server toolchain portable.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Analyze images for file metadata, dimensions, hashes, metadata markers, byte entropy, provenance availability, and editing-software markers.
+- Analyze pasted text for transparent stylometric statistics.
+- Review evidence-led reports and browse/delete analysis history.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Keep advanced AI detection explicitly marked as unavailable until a real open model is configured.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Run API codegen after changing `lib/api-spec/openapi.yaml`.
+- Use the managed API and TRACE workflows rather than starting root-level dev commands.
 
 ## Pointers
 

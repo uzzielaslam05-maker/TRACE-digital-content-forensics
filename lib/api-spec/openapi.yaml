@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: analyses
+    description: Deterministic forensic analyses
 paths:
   /healthz:
     get:
@@ -24,8 +26,276 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /analyze/image:
+    post:
+      operationId: analyzeImage
+      tags: [analyses]
+      summary: Analyze an image
+      description: Extracts metadata and deterministic forensic signals from an uploaded image.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageAnalysisInput"
+      responses:
+        "201":
+          description: Completed image analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForensicResult"
+        "400":
+          description: Invalid or unsupported upload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /analyze/text:
+    post:
+      operationId: analyzeText
+      tags: [analyses]
+      summary: Analyze text
+      description: Computes transparent stylometric signals from supplied text.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TextAnalysisInput"
+      responses:
+        "201":
+          description: Completed text analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForensicResult"
+        "400":
+          description: Invalid text
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /analyses:
+    get:
+      operationId: listAnalyses
+      tags: [analyses]
+      summary: List recent analyses
+      responses:
+        "200":
+          description: Recent analysis records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnalysisSummary"
+  /analyses/summary:
+    get:
+      operationId: getAnalysisSummary
+      tags: [analyses]
+      summary: Get analysis workspace summary
+      responses:
+        "200":
+          description: Summary of the local analysis history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisSummaryStats"
+  /analyses/{analysis_id}:
+    get:
+      operationId: getAnalysis
+      tags: [analyses]
+      summary: Get a forensic report
+      parameters:
+        - $ref: "#/components/parameters/AnalysisId"
+      responses:
+        "200":
+          description: Forensic report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForensicResult"
+        "404":
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteAnalysis
+      tags: [analyses]
+      summary: Delete an analysis record
+      parameters:
+        - $ref: "#/components/parameters/AnalysisId"
+      responses:
+        "204":
+          description: Analysis deleted
+        "404":
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
+  parameters:
+    AnalysisId:
+      name: analysis_id
+      in: path
+      required: true
+      description: Analysis identifier
+      schema:
+        type: string
   schemas:
+    ImageAnalysisInput:
+      type: object
+      required: [file_data, filename, mime_type]
+      properties:
+        file_data:
+          type: string
+          format: byte
+          description: Base64-encoded image bytes.
+        filename:
+          type: string
+          maxLength: 255
+        mime_type:
+          type: string
+          enum: [image/jpeg, image/png, image/webp, image/gif]
+    TextAnalysisInput:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 200000
+        filename:
+          type: ["string", "null"]
+          maxLength: 255
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    ForensicSignal:
+      type: object
+      required: [detector, finding, direction, severity, explanation]
+      properties:
+        detector:
+          type: string
+        finding:
+          type: string
+        direction:
+          type: string
+          enum: [supports_authenticity, supports_ai, supports_editing, neutral]
+        confidence:
+          type: ["number", "null"]
+        severity:
+          type: string
+          enum: [low, medium, high]
+        explanation:
+          type: string
+        value:
+          type: ["string", "number", "boolean", "null"]
+    FileMetadata:
+      type: object
+      properties:
+        filename: { type: string }
+        mime_type: { type: string }
+        file_size_bytes: { type: integer }
+        width: { type: ["integer", "null"] }
+        height: { type: ["integer", "null"] }
+        color_mode: { type: ["string", "null"] }
+        format: { type: ["string", "null"] }
+        sha256: { type: string }
+        exif: { type: object, additionalProperties: true }
+    TextStatistics:
+      type: object
+      properties:
+        word_count: { type: integer }
+        sentence_count: { type: integer }
+        average_sentence_length: { type: number }
+        vocabulary_diversity: { type: number }
+        repetition_rate: { type: number }
+        punctuation_density: { type: number }
+    ForensicResult:
+      type: object
+      required:
+        - analysis_id
+        - modality
+        - filename
+        - classification
+        - overall_confidence
+        - evidence_strength
+        - provenance_status
+        - signals
+        - limitations
+        - model_versions
+        - created_at
+        - processing_time_ms
+      properties:
+        analysis_id: { type: string }
+        modality:
+          type: string
+          enum: [image, text]
+        filename: { type: string }
+        classification:
+          type: string
+          enum: [likely_human, likely_ai, likely_ai_assisted, likely_manipulated, inconclusive]
+        overall_confidence: { type: ["number", "null"] }
+        evidence_strength:
+          type: string
+          enum: [insufficient, limited, moderate, strong]
+        provenance_status:
+          type: string
+          enum: [verified, present, invalid, unavailable, unknown]
+        signals:
+          type: array
+          items: { $ref: "#/components/schemas/ForensicSignal" }
+        limitations:
+          type: array
+          items: { type: string }
+        model_versions:
+          type: array
+          items: { type: string }
+        metadata:
+          anyOf:
+            - $ref: "#/components/schemas/FileMetadata"
+            - type: "null"
+        text_statistics:
+          anyOf:
+            - $ref: "#/components/schemas/TextStatistics"
+            - type: "null"
+        created_at:
+          type: string
+          format: date-time
+        processing_time_ms: { type: integer }
+    AnalysisSummary:
+      type: object
+      required: [analysis_id, filename, modality, classification, evidence_strength, created_at, processing_time_ms]
+      properties:
+        analysis_id: { type: string }
+        filename: { type: string }
+        modality:
+          type: string
+          enum: [image, text]
+        classification:
+          type: string
+          enum: [likely_human, likely_ai, likely_ai_assisted, likely_manipulated, inconclusive]
+        evidence_strength:
+          type: string
+          enum: [insufficient, limited, moderate, strong]
+        created_at: { type: string, format: date-time }
+        processing_time_ms: { type: integer }
+    AnalysisSummaryStats:
+      type: object
+      required: [total, image_count, text_count, inconclusive_count]
+      properties:
+        total: { type: integer }
+        image_count: { type: integer }
+        text_count: { type: integer }
+        inconclusive_count: { type: integer }
     HealthStatus:
       type: object
       properties:

@@ -1,0 +1,1 @@
+- [TRACE evidence model](trace-evidence-model.md) — keep deterministic findings separate from interpretation and leave confidence null without a trustworthy detector.
