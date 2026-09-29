@@ -1,11 +1,12 @@
-import { jsonb, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { jsonb, doublePrecision, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const analysesTable = pgTable("analyses", {
   id: text("id").primaryKey(),
   filename: text("filename").notNull(),
   modality: text("modality").notNull(),
   classification: text("classification").notNull(),
-  overallConfidence: integer("overall_confidence"),
+  // Fractional probability (0-1), not a whole number -- e.g. 0.714.
+  overallConfidence: doublePrecision("overall_confidence"),
   evidenceStrength: text("evidence_strength").notNull(),
   provenanceStatus: text("provenance_status").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -20,7 +21,8 @@ export const evidenceTable = pgTable("evidence", {
   detector: text("detector").notNull(),
   finding: text("finding").notNull(),
   direction: text("direction").notNull(),
-  confidence: integer("confidence"),
+  // Fractional probability (0-1), not a whole number -- e.g. 0.714.
+  confidence: doublePrecision("confidence"),
   severity: text("severity").notNull(),
   explanation: text("explanation").notNull(),
   value: text("value"),

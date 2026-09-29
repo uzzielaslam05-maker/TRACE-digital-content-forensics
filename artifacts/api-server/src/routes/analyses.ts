@@ -138,12 +138,13 @@ router.post("/analyze/image", async (req, res) => {
   }
 
   try {
-    const result = buildImageResult({
+    const result = await buildImageResult({
       bytes,
       filename,
       mimeType,
-      processingTimeMs: Math.max(1, Math.round(performance.now() - startedAt)),
+      processingTimeMs: 0,
     });
+    result.processing_time_ms = Math.max(1, Math.round(performance.now() - startedAt));
     await saveResult(result);
     return res.status(201).json(result);
   } catch (error) {
@@ -158,11 +159,12 @@ router.post("/analyze/text", async (req, res) => {
 
   const startedAt = performance.now();
   try {
-    const result = buildTextResult({
+    const result = await buildTextResult({
       text: parsed.data.text,
       filename: parsed.data.filename,
-      processingTimeMs: Math.max(1, Math.round(performance.now() - startedAt)),
+      processingTimeMs: 0,
     });
+    result.processing_time_ms = Math.max(1, Math.round(performance.now() - startedAt));
     await saveResult(result);
     return res.status(201).json(result);
   } catch (error) {

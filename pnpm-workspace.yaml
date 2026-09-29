@@ -68,12 +68,6 @@ catalog:
 
 autoInstallPeers: false
 
-onlyBuiltDependencies:
-  - '@swc/core'
-  - esbuild
-  - msw
-  - unrs-resolver
-
 overrides:
   # replit uses linux-x64 only, we can exclude all other platforms
   "esbuild>@esbuild/darwin-arm64": "-"
@@ -160,3 +154,16 @@ overrides:
   esbuild: "0.28.2"
   # orval pins js-yaml to an exact version older than the CVE fix (>=4.3.2)
   js-yaml: '4.3.2'
+
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  msw: true
+  unrs-resolver: true
+  # Skipped on purpose: this script only fetches optional extras from
+  # api.nuget.org and can fail in restricted/offline build environments.
+  # onnxruntime-node's npm package already ships a working prebuilt native
+  # binary for linux-x64/win32-x64/darwin-arm64 without it.
+  onnxruntime-node: false
+  protobufjs: true
+  sharp: true
