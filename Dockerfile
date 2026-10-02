@@ -15,6 +15,21 @@ RUN corepack enable && corepack prepare pnpm@12.4.2 --activate
 # commit, so full-reinstall build time isn't a real cost.
 COPY . .
 
+# The two .onnx model files are tracked with Git LFS, but LFS support is
+# inconsistent across hosting providers -- notably, Railway's GitHub
+# integration does not resolve LFS pointers at all, which silently leaves
+# tiny 130-byte placeholder text files in place of the real binaries. To
+# make this Dockerfile work the same way everywhere, fetch the real files
+# fresh from GitHub Releases (a plain file download, unrelated to Git LFS)
+# and overwrite whatever git checked out.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
+  && curl -fL -o artifacts/api-server/models/ai_image_detector.onnx \
+       https://github.com/uzzielaslam05-maker/TRACE-digital-content-forensics/releases/download/models-v1/ai_image_detector.onnx \
+  && curl -fL -o artifacts/api-server/models/text-detector/model.onnx \
+       https://github.com/uzzielaslam05-maker/TRACE-digital-content-forensics/releases/download/models-v1/model.onnx
+
 # pnpm-workspace.yaml's `allowBuilds` map pre-approves every native
 # postinstall script this project needs (esbuild, sharp, protobufjs, etc.)
 # so this installs fully non-interactively -- no `pnpm approve-builds`
