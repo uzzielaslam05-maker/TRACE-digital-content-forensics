@@ -14,6 +14,14 @@ const classificationLabel: Record<string, string> = { likely_human: 'Likely huma
 const evidenceLabel: Record<string, string> = { insufficient: 'Insufficient', limited: 'Limited', moderate: 'Moderate', strong: 'Strong' };
 const directionLabel: Record<string, string> = { supports_authenticity: 'Authenticity', supports_ai: 'AI indicators', supports_editing: 'Editing indicators', neutral: 'Neutral' };
 const cx = (...items: Array<string | false | undefined>) => items.filter(Boolean).join(' ');
+// The API returns raw snake_case identifiers (e.g. "transparent_statistics_computed",
+// "ai_model") for fields with no dedicated lookup table above -- this turns
+// those into readable sentence-case text, with "ai" capitalized as "AI".
+const humanize = (value: string) => {
+  const spaced = value.replace(/_/g, ' ');
+  const sentenced = spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  return sentenced.replace(/\bai\b/gi, 'AI');
+};
 const formatDate = (date?: string) => date ? new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(date)) : '—';
 const formatMs = (ms?: number) => typeof ms === 'number' ? `${ms.toLocaleString()} ms` : '—';
 const fileSize = (bytes?: number) => typeof bytes === 'number' ? `${(bytes / 1024).toFixed(bytes > 1024 ? 1 : 0)} KB` : '—';
@@ -190,7 +198,7 @@ function ReportDetail({ result, sourcePreview, onBack, onCopy, copied, onDelete,
 
 function SignalCard({ signal, index }: { signal: ForensicSignal; index: number }) {
   const tone = signal.direction === 'supports_ai' || signal.direction === 'supports_editing' ? 'orange' : signal.direction === 'supports_authenticity' ? 'teal' : 'muted';
-  return <div data-testid={`card-signal-${index}`} className="border border-border bg-card p-5 hover:border-primary/40"><div className="flex items-start justify-between gap-4"><div><div className="mono text-[9px] uppercase tracking-[.15em] text-muted-foreground">{signal.detector}</div><div className="mt-2 text-sm font-bold">{signal.finding}</div></div><Badge tone={tone}>{directionLabel[signal.direction] ?? signal.direction}</Badge></div><p className="mt-4 text-xs leading-6 text-muted-foreground">{signal.explanation}</p><div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border pt-3"><span className="text-[10px] font-bold uppercase tracking-[.13em] text-muted-foreground">Severity: <span className={cx(signal.severity === 'high' ? 'text-destructive' : signal.severity === 'medium' ? 'text-accent-foreground' : 'text-muted-foreground')}>{signal.severity}</span></span>{signal.confidence != null && <span className="text-[10px] font-bold uppercase tracking-[.13em] text-muted-foreground">Signal confidence: <span className="text-foreground">{Math.round(signal.confidence * 100)}%</span></span>}{signal.value != null && <span className="mono text-[10px] text-primary">value: {String(signal.value)}</span>}</div></div>;
+  return <div data-testid={`card-signal-${index}`} className="border border-border bg-card p-5 hover:border-primary/40"><div className="flex items-start justify-between gap-4"><div><div className="mono text-[9px] uppercase tracking-[.15em] text-muted-foreground">{humanize(signal.detector)}</div><div className="mt-2 text-sm font-bold">{humanize(signal.finding)}</div></div><Badge tone={tone}>{directionLabel[signal.direction] ?? signal.direction}</Badge></div><p className="mt-4 text-xs leading-6 text-muted-foreground">{signal.explanation}</p><div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border pt-3"><span className="text-[10px] font-bold uppercase tracking-[.13em] text-muted-foreground">Severity: <span className={cx(signal.severity === 'high' ? 'text-destructive' : signal.severity === 'medium' ? 'text-accent-foreground' : 'text-muted-foreground')}>{signal.severity}</span></span>{signal.confidence != null && <span className="text-[10px] font-bold uppercase tracking-[.13em] text-muted-foreground">Signal confidence: <span className="text-foreground">{Math.round(signal.confidence * 100)}%</span></span>}{signal.value != null && <span className="mono text-[10px] text-primary">value: {String(signal.value)}</span>}</div></div>;
 }
 
 function AsideDetails({ result }: { result: ForensicResult }) {
