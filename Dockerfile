@@ -26,9 +26,9 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends curl ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
   && curl -fL -o artifacts/api-server/models/ai_image_detector.onnx \
-       https://github.com/uzzielaslam05-maker/TRACE-digital-content-forensics/releases/download/models-v1/ai_image_detector.onnx \
+       https://github.com/uzzielaslam05-maker/TRACE-digital-content-forensics/releases/download/models-v2/ai_image_detector.onnx \
   && curl -fL -o artifacts/api-server/models/text-detector/model.onnx \
-       https://github.com/uzzielaslam05-maker/TRACE-digital-content-forensics/releases/download/models-v1/model.onnx
+       https://github.com/uzzielaslam05-maker/TRACE-digital-content-forensics/releases/download/models-v2/model.onnx
 
 # pnpm-workspace.yaml's `allowBuilds` map pre-approves every native
 # postinstall script this project needs (esbuild, sharp, protobufjs, etc.)
