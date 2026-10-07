@@ -58,7 +58,15 @@ function Badge({ children, tone = 'muted' }: { children: ReactNode; tone?: 'mute
 }
 
 function IconMark() {
-  return <div className="relative flex h-9 w-9 shrink-0 items-center justify-center border border-primary/40 bg-primary/10 text-primary"><Fingerprint size={20} strokeWidth={1.7} /></div>;
+  return (
+    <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-primary/40">
+      <img
+        src="/logo.png"
+        alt="TRACE"
+        className="h-full w-full object-cover"
+      />
+    </div>
+  );
 }
 
 function Shell({ children }: { children: ReactNode }) {
