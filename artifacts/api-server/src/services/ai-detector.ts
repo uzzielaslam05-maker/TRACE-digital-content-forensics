@@ -16,7 +16,7 @@ const IMAGE_MODEL_PATH = path.join(MODELS_DIR, "ai_image_detector.onnx");
 const TEXT_MODEL_DIR = path.join(MODELS_DIR, "text-detector");
 const TEXT_MODEL_PATH = path.join(TEXT_MODEL_DIR, "model.onnx");
 
-const IMAGE_SIZE = 128;
+const IMAGE_SIZE = 192;
 const IMAGE_MEAN = [0.485, 0.456, 0.406];
 const IMAGE_STD = [0.229, 0.224, 0.225];
 const TEXT_MAX_LENGTH = 256;
@@ -25,10 +25,10 @@ const TEXT_MAX_LENGTH = 256;
 // notebooks). Reported alongside every AI-probability signal so a bare
 // percentage is never shown without its known, honest error rate.
 export const IMAGE_MODEL_STATS = {
-  modelVersion: "mobilenetv3-small-cifake-v1",
-  datasetNote: "CIFAKE (Stable Diffusion vs. CIFAR-10 photos, trained at 128x128)",
-  accuracy: 0.977,
-  realFalsePositiveRate: 0.0191,
+  modelVersion: "mobilenetv3-small-shutterstock-v2",
+  datasetNote: "AI vs. Human-Generated Images (Shutterstock photos vs. paired AI equivalents, trained at 192x192)",
+  accuracy: 0.986,
+  realFalsePositiveRate: 0.0094,
 };
 export const TEXT_MODEL_STATS = {
   modelVersion: "distilbert-hc3-v1",
@@ -82,13 +82,16 @@ const softmax = (logits: number[]): number[] => {
 };
 
 /**
- * Runs the image classifier. Preprocessing intentionally mirrors the
- * training pipeline exactly: resize to 128x128 with bilinear interpolation
- * (torchvision's `Resize` default -- sharp's default kernel is lanczos3,
- * which would silently skew predictions on upscaled low-res inputs like
- * CIFAKE's 32x32 source images), then normalize with ImageNet mean/std.
- * Training used label order ['FAKE', 'REAL'], so index 0 is the AI/fake
- * probability.
+ * Runs the image classifier (v2, trained on the Shutterstock-based
+ * "AI vs. Human-Generated Images" dataset after v1's CIFAKE-trained model
+ * was found to confidently misclassify real, high-resolution photos as AI --
+ * see project notes). Preprocessing mirrors the training pipeline exactly:
+ * resize to 192x192 with bilinear interpolation (torchvision's `Resize`
+ * default -- sharp's default kernel is lanczos3, which would skew
+ * predictions), then normalize with ImageNet mean/std. Training used label
+ * order [REAL, AI] -- index 1 is the AI probability. This is the OPPOSITE
+ * order from v1 (which was [FAKE, REAL]); easy to get backwards silently if
+ * ever swapping the model file again.
  */
 export const classifyImage = async (bytes: Buffer): Promise<ClassifierResult> => {
   const session = await loadImageSession();
@@ -118,7 +121,10 @@ export const classifyImage = async (bytes: Buffer): Promise<ClassifierResult> =>
     const tensor = new ort.Tensor("float32", chw, [1, 3, IMAGE_SIZE, IMAGE_SIZE]);
     const result = await session.run({ [session.inputNames[0]]: tensor });
     const logits = Array.from(result[session.outputNames[0]].data as Float32Array);
-    const [probabilityAi] = softmax(logits);
+    // v2's training label order is REVERSED from v1: index 0 = REAL, index 1 = AI
+    // (v1 was FAKE=0, REAL=1). Easy to get backwards silently -- verified against
+    // known test cases (see the model's training session) before shipping this.
+    const [, probabilityAi] = softmax(logits);
     return { available: true, probabilityAi };
   } catch {
     return { available: false, probabilityAi: null };
