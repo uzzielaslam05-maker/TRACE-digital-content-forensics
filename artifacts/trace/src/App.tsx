@@ -41,7 +41,20 @@ function ContentPreview({ source, pending = false }: { source: SourcePreview; pe
 }
 
 function Badge({ children, tone = 'muted' }: { children: ReactNode; tone?: 'muted' | 'teal' | 'orange' | 'red' | 'blue' }) {
-  return <span className={cx('inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.13em]', tone === 'teal' && 'border-primary/25 bg-primary/10 text-primary', tone === 'orange' && 'border-accent/30 bg-accent/10 text-accent-foreground', tone === 'red' && 'border-destructive/25 bg-destructive/10 text-destructive', tone === 'blue' && 'border-sky-700/20 bg-sky-700/10 text-sky-800', tone === 'muted' && 'border-border bg-muted text-muted-foreground')}>{children}</span>;
+  return (
+    <span
+      className={cx(
+        'inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.13em]',
+        tone === 'teal' && 'border-primary/40 bg-primary/20 text-primary',
+        tone === 'orange' && 'border-accent/50 bg-accent/20 text-accent-foreground',
+        tone === 'red' && 'border-destructive/40 bg-destructive/20 text-destructive',
+        tone === 'blue' && 'border-sky-400/40 bg-sky-500/20 text-sky-300',
+        tone === 'muted' && 'border-border bg-muted text-muted-foreground'
+      )}
+    >
+      {children}
+    </span>
+  );
 }
 
 function IconMark() {
