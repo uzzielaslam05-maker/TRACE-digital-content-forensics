@@ -25,10 +25,10 @@ const TEXT_MAX_LENGTH = 256;
 // notebooks). Reported alongside every AI-probability signal so a bare
 // percentage is never shown without its known, honest error rate.
 export const IMAGE_MODEL_STATS = {
-  modelVersion: "mobilenetv3-small-shutterstock-v2",
-  datasetNote: "AI vs. Human-Generated Images (Shutterstock photos vs. paired AI equivalents, trained at 192x192)",
-  accuracy: 0.986,
-  realFalsePositiveRate: 0.0094,
+  modelVersion: "mobilenetv3-small-v3",
+  datasetNote: "Shutterstock photos vs. paired AI equivalents, plus Midjourney/DALL-E/Stable Diffusion art vs. real photos, trained at 192x192",
+  accuracy: 0.94,
+  realFalsePositiveRate: 0.046,
 };
 export const TEXT_MODEL_STATS = {
   modelVersion: "distilbert-hc3-v1",
@@ -82,10 +82,12 @@ const softmax = (logits: number[]): number[] => {
 };
 
 /**
- * Runs the image classifier (v2, trained on the Shutterstock-based
- * "AI vs. Human-Generated Images" dataset after v1's CIFAKE-trained model
- * was found to confidently misclassify real, high-resolution photos as AI --
- * see project notes). Preprocessing mirrors the training pipeline exactly:
+ /**
+ * Runs the image classifier (v3, trained on a combination of the
+ * Shutterstock-based "AI vs. Human-Generated Images" dataset and a
+ * Midjourney/DALL-E/Stable Diffusion art dataset, after v2 was found to
+ * confidently miss stylized/illustrative AI art -- see project notes).
+ * Preprocessing mirrors the training pipeline exactly:
  * resize to 192x192 with bilinear interpolation (torchvision's `Resize`
  * default -- sharp's default kernel is lanczos3, which would skew
  * predictions), then normalize with ImageNet mean/std. Training used label
