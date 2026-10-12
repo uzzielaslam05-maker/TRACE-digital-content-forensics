@@ -31,10 +31,10 @@ export const IMAGE_MODEL_STATS = {
   realFalsePositiveRate: 0.046,
 };
 export const TEXT_MODEL_STATS = {
-  modelVersion: "distilbert-hc3-v1",
-  datasetNote: "HC3 (human vs. ChatGPT answers)",
-  accuracy: 0.997,
-  humanFalsePositiveRate: 0.0041,
+  modelVersion: "distilbert-v2",
+  datasetNote: "HC3 (human vs. ChatGPT Q&A) plus SemEval-2024 Task 8 (human vs. ChatGPT/Davinci/Dolly/Cohere across Wikipedia, WikiHow, PeerRead, Reddit, arXiv)",
+  accuracy: 0.95,
+  humanFalsePositiveRate: 0.083,
 };
 
 type ClassifierResult = { available: boolean; probabilityAi: number | null };
@@ -134,7 +134,10 @@ export const classifyImage = async (bytes: Buffer): Promise<ClassifierResult> =>
 };
 
 /**
- * Runs the text classifier. Tokenization uses the exact tokenizer.json
+ * Runs the text classifier (v2, trained on HC3 plus SemEval-2024 Task 8 to
+ * cover multiple generators -- ChatGPT, Davinci, Dolly, Cohere -- and
+ * multiple writing domains, after v1 was found to only ever have seen
+ * ChatGPT answering questions). Tokenization uses the exact tokenizer.json
  * exported from training (via transformers.js), so wordpiece splitting
  * matches the Python tokenizer byte-for-byte -- inference then runs
  * directly against the ONNX model, bypassing transformers.js's higher-level
